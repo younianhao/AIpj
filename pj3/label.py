@@ -38,4 +38,4 @@ for xml_file in os.listdir(xml_path):
         with h5py.File(os.path.join(mat_path, xml_file.replace("R.xml", ".h5")), 'w') as hf:
             hf['density'] = density_map
 
-print("successfully paser" + sum + "labels")
+print("successfully paser" + str(sum) + "labels")
