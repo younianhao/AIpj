@@ -87,7 +87,7 @@ original_lr = lr
 batch_size = 1
 momentum = 0.95
 decay = 5*1e-4
-epochs = 50
+epochs = 100
 steps = [-1, 1, 100, 150]
 scales = [1, 1, 1, 1]
 workers = 8
@@ -124,7 +124,7 @@ def main():
         img_dir,
         gt_dir, transform=transform, train=True)
     
-    sample_size = min(len(dataset), 100)  # 例如，使用前100个样本进行调试
+    sample_size = min(len(dataset), 600)  # 例如，使用前100个样本进行调试
     dataset = torch.utils.data.Subset(dataset, range(sample_size))
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
