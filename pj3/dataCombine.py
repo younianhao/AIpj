@@ -77,3 +77,4 @@ for index1, index2 in zip(selected_files1, selected_files2):
     output_xml_file = os.path.join(xml_path, "_combined" + str(index1) + "and" + str(index2) + "R.xml")
 
     split_and_combine_images(input_rgb_file1, input_rgb_file2, input_xml_file1, input_xml_file2, output_rgb_file, output_xml_file)
+print("successfully create 300 combined samples")

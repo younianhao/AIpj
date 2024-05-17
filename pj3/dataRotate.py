@@ -4,7 +4,6 @@ import xml.etree.ElementTree as ET
 import random
 
 def flip_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file):
-    print(input_xml_file)
     # 处理图像文件
     img = Image.open(input_rgb_file)
     flipped_img = img.transpose(Image.FLIP_TOP_BOTTOM)
@@ -51,3 +50,4 @@ for index in selected_files:
     output_rgb_file = os.path.join(rgb_path, "_Rotate" + str(index) + ".jpg")
     output_xml_file = os.path.join(xml_path, "_Rotate" + str(index) + "R.xml")
     flip_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file)
+print("successfully create 300 rotated samples")
