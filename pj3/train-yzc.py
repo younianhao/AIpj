@@ -74,7 +74,7 @@ class ImgDataset(Dataset):
 
         gt_path = os.path.join(
             self.gt_dir, os.path.splitext(img_name)[0] + '.h5')
-        
+
         rgb_img, ir_img, target = load_data(rgb_path, ir_path, gt_path, self.train)
 
         if self.transform is not None:
@@ -182,19 +182,29 @@ def train(model, criterion, optimizer, epoch, train_loader):
     end = time.time()
 
     # 遍历训练数据加载器
-    for i, (img, target) in enumerate(train_loader):
+    # for i, (img, target) in enumerate(train_loader):
+    for i, (rgb_img, ir_img, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
         # 前向传播
-        img = img.cuda()
-        img = Variable(img)
-        output = model(img)
+        # img = img.cuda()
+        # img = Variable(img)
+
+        rgb_img = rgb_img.cuda()
+        ir_img = ir_img.cuda()
+        rgb_img = Variable(rgb_img)
+        ir_img = Variable(ir_img)
+
+        output = model(rgb_img, ir_img)
+        # output = model(img)
+
         target = target.type(torch.FloatTensor).unsqueeze(1).cuda()
         target = Variable(target)
         loss = criterion(output, target)
 
         # 反向传播 & 参数更新
-        losses.update(loss.item(), img.size(0))
+        # losses.update(loss.item(), img.size(0))
+        losses.update(loss.item(), rgb_img.size(0))
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
