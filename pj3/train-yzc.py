@@ -121,8 +121,8 @@ def main():
     # 修改归一化参数以适应6通道数据
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406, 0, 0, 0], std=[
-            0.229, 0.224, 0.225, 1, 1, 1]),  # 需要根据实际情况修改
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                             0.229, 0.224, 0.225]),
     ])
 
     dataset = ImgDataset(
