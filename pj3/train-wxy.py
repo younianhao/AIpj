@@ -176,27 +176,34 @@ def train(model, criterion, optimizer, epoch, train_loader):
     print('epoch %d, processed %d samples, lr %.10f' %
           (epoch, epoch * len(train_loader.dataset), lr))
 
+    # 训练模式
     model.train()
     end = time.time()
 
-    for i, (img, target) in enumerate(train_loader):
+    # 遍历训练数据加载器
+    for i, (rgb_img, ir_img, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
-        img = img.cuda()
-        img = Variable(img)
+        # 前向传播
+        rgb_img = rgb_img.cuda()
+        ir_img = ir_img.cuda()
+        rgb_img = Variable(rgb_img)
+        ir_img = Variable(ir_img)
+
+        output = model(rgb_img, ir_img)
+        # output = model(img)
+
         target = target.type(torch.FloatTensor).unsqueeze(1).cuda()
         target = Variable(target)
+        loss = criterion(output, target)
+
+        # 反向传播 & 参数更新
+        # losses.update(loss.item(), img.size(0))
+        losses.update(loss.item(), rgb_img.size(0))
         optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-        with autocast():
-            output = model(img)
-            loss = criterion(output, target)
-
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
-
-        losses.update(loss.item(), img.size(0))
         batch_time.update(time.time() - end)
         end = time.time()
 
