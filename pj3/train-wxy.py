@@ -82,12 +82,12 @@ class CustomDensityLoss(nn.Module):
 criterion = CustomDensityLoss(alpha=0.5).cuda()
 
 
-lr = 1e-7
+lr = 1e-8
 original_lr = lr
 batch_size = 1
 momentum = 0.95
 decay = 5*1e-4
-epochs = 100
+epochs = 50
 steps = [-1, 1, 100, 150]
 scales = [1, 1, 1, 1]
 workers = 8
