@@ -68,9 +68,13 @@ class ImgDataset(Dataset):
         assert index <= len(self), 'index range error'
         rgb_path = self.img_paths[index]
         img_name = os.path.basename(rgb_path)
-        ir_path = os.path.join(self.ir_dir, img_name)
+
+        ir_name = os.path.splitext(img_name)[0] + 'R.jpg'
+        ir_path = os.path.join(self.ir_dir, ir_name)
+
         gt_path = os.path.join(
             self.gt_dir, os.path.splitext(img_name)[0] + '.h5')
+        
         rgb_img, ir_img, target = load_data(rgb_path, ir_path, gt_path, self.train)
 
         if self.transform is not None:
