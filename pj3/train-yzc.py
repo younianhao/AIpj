@@ -228,10 +228,12 @@ def validate(model, val_loader):
     model.eval()
     mae = 0  # 平均绝对误差（MAE）越小越好
 
-    for i, (img, target) in enumerate(val_loader):
-        img = img.cuda()
-        img = Variable(img)
-        output = model(img)
+    for i, (rgb_img, ir_img, target) in enumerate(val_loader):
+        rgb_img = rgb_img.cuda()
+        ir_img = ir_img.cuda()
+        rgb_img = Variable(rgb_img)
+        ir_img = Variable(ir_img)
+        output = model(rgb_img, ir_img)
 
         mae += abs(output.data.sum() -
                    target.sum().type(torch.FloatTensor).cuda())
