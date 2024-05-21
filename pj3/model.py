@@ -15,11 +15,20 @@ class CSRNet(nn.Module):
             self.backend_feat, in_channels=512, dilation=True)
         self.output_layer = nn.Conv2d(64, 1, kernel_size=1)
         if not load_weights:
+            # mod = models.vgg16(pretrained=True)
+            # self._initialize_weights()
+            # for i, (key, value) in enumerate(list(self.frontend.state_dict().items())):
+            #     self.frontend.state_dict()[key].data[:] = list(
+            #         mod.state_dict().items())[i][1].data[:]
             mod = models.vgg16(pretrained=True)
             self._initialize_weights()
-            for i, (key, value) in enumerate(list(self.frontend.state_dict().items())):
-                self.frontend.state_dict()[key].data[:] = list(
-                    mod.state_dict().items())[i][1].data[:]
+            # 加载预训练权重，注意要根据需要修改通道数
+            state_dict = mod.state_dict()
+            frontend_state_dict = self.frontend.state_dict()
+            for key in state_dict:
+                if 'features' in key:
+                    if key in frontend_state_dict:
+                        frontend_state_dict[key].copy_(state_dict[key])
 
     # def forward(self, x):
     #     x = self.frontend(x)
