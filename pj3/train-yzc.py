@@ -117,10 +117,12 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=decay)
+
+    # 修改归一化参数以适应6通道数据
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-            0.229, 0.224, 0.225]),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406, 0, 0, 0], std=[
+            0.229, 0.224, 0.225, 1, 1, 1]),  # 需要根据实际情况修改
     ])
 
     dataset = ImgDataset(
@@ -182,14 +184,10 @@ def train(model, criterion, optimizer, epoch, train_loader):
     end = time.time()
 
     # 遍历训练数据加载器
-    # for i, (img, target) in enumerate(train_loader):
     for i, (rgb_img, ir_img, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
         # 前向传播
-        # img = img.cuda()
-        # img = Variable(img)
-
         rgb_img = rgb_img.cuda()
         ir_img = ir_img.cuda()
         rgb_img = Variable(rgb_img)
