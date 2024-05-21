@@ -30,9 +30,12 @@ xml_path = "./dataset/train/labels/"
 mat_path = "./dataset/train/hdf5s/"
 image_shape = (512, 640)  # Assuming the image shape is fixed
 
+sum = 0
 for xml_file in os.listdir(xml_path):
     if xml_file.endswith(".xml"):
-        print(xml_file)
+        sum = sum + 1
         density_map = parse_xml(os.path.join(xml_path, xml_file), image_shape)
         with h5py.File(os.path.join(mat_path, xml_file.replace("R.xml", ".h5")), 'w') as hf:
             hf['density'] = density_map
+
+print("successfully paser" + str(sum) + "labels")
