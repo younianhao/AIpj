@@ -21,7 +21,14 @@ class CSRNet(nn.Module):
                 self.frontend.state_dict()[key].data[:] = list(
                     mod.state_dict().items())[i][1].data[:]
 
-    def forward(self, x):
+    # def forward(self, x):
+    #     x = self.frontend(x)
+    #     x = self.backend(x)
+    #     x = self.output_layer(x)
+    #     return x
+    def forward(self, rgb_img, ir_img):
+        # 将RGB和IR图像在通道维度上拼接
+        x = torch.cat((rgb_img, ir_img), dim=1)
         x = self.frontend(x)
         x = self.backend(x)
         x = self.output_layer(x)
