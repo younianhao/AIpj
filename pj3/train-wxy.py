@@ -89,10 +89,10 @@ original_lr = lr
 batch_size = 1
 momentum = 0.95
 decay = 5 * 1e-4
-epochs = 400
+epochs = 50
 steps = [-1, 1, 100, 150]
 scales = [1, 1, 1, 1]
-workers = 4
+workers = 8
 seed = time.time()
 print_freq = 30
 img_dir = "./dataset/train/rgb/"
@@ -130,6 +130,8 @@ def main():
         ir_dir,
         gt_dir, transform=transform, train=True)
 
+    sample_size = min(len(dataset), 600)  # 例如，使用前600个样本进行调试
+    dataset = torch.utils.data.Subset(dataset, range(sample_size))
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
     # 将数据集分割为训练集和验证集
