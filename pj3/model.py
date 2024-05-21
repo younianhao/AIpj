@@ -15,11 +15,21 @@ class CSRNet(nn.Module):
             self.backend_feat, in_channels=512, dilation=True)
         self.output_layer = nn.Conv2d(64, 1, kernel_size=1)
         if not load_weights:
+            # mod = models.vgg16(pretrained=True)
+            # self._initialize_weights()
+            # for i, (key, value) in enumerate(list(self.frontend.state_dict().items())):
+            #     self.frontend.state_dict()[key].data[:] = list(
+            #         mod.state_dict().items())[i][1].data[:]
             mod = models.vgg16(pretrained=True)
+            # 初始化CSRNet模型权重
             self._initialize_weights()
-            for i, (key, value) in enumerate(list(self.frontend.state_dict().items())):
-                self.frontend.state_dict()[key].data[:] = list(
-                    mod.state_dict().items())[i][1].data[:]
+            # 获取VGG16模型的前端权重和CSRNet模型的前端权重
+            vgg_frontend_state_dict = mod.features.state_dict()
+            csrnet_frontend_state_dict = self.frontend.state_dict()
+            # 遍历CSRNet模型的前端权重，并将对应的VGG16模型的前端权重加载进去
+            for key in vgg_frontend_state_dict:
+                if key in csrnet_frontend_state_dict:
+                    csrnet_frontend_state_dict[key].copy_(vgg_frontend_state_dict[key])
 
     # def forward(self, x):
     #     x = self.frontend(x)
