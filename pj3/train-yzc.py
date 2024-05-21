@@ -23,19 +23,30 @@ def save_checkpoint(state, is_best, task_id, filename='checkpoint.pth.tar', save
         shutil.copyfile(checkpoint_path, best_model_path)
 
 
-def load_data(img_path, gt_path, train=True):
-    img = Image.open(img_path).convert('RGB')
+# def load_data(img_path, gt_path, train=True):
+#     img = Image.open(img_path).convert('RGB')
+#     gt_file = h5py.File(gt_path)
+#     target = np.asarray(gt_file['density'])
+#     target = cv2.resize(
+#         target, (target.shape[1]//8, target.shape[0]//8), interpolation=cv2.INTER_CUBIC)*64
+#     return img, target
+
+def load_data(rgb_path, ir_path, gt_path, train=True):
+    rgb_img = Image.open(rgb_path).convert('RGB')
+    # 假设红外线图片也是三通道，如果是单通道则改为 .convert('L')
+    ir_img = Image.open(ir_path).convert('RGB')
     gt_file = h5py.File(gt_path)
     target = np.asarray(gt_file['density'])
-    target = cv2.resize(
-        target, (target.shape[1]//8, target.shape[0]//8), interpolation=cv2.INTER_CUBIC)*64
-    return img, target
+    target = cv2.resize(target, (target.shape[1] // 8, target.shape[0] // 8), interpolation=cv2.INTER_CUBIC) * 64
+    return rgb_img, ir_img, target
 
 
 class ImgDataset(Dataset):
-    def __init__(self, img_dir, gt_dir, shape=None, shuffle=True, transform=None, train=False, batch_size=1, num_workers=4):
+    def __init__(self, img_dir, ir_dir, gt_dir, shape=None, shuffle=True, transform=None, train=False, batch_size=1,
+                 num_workers=4):
         self.img_dir = img_dir
         self.gt_dir = gt_dir
+        self.ir_dir = ir_dir
         self.transform = transform
         self.train = train
         self.shape = shape
@@ -55,21 +66,25 @@ class ImgDataset(Dataset):
 
     def __getitem__(self, index):
         assert index <= len(self), 'index range error'
-        img_path = self.img_paths[index]
-        img_name = os.path.basename(img_path)
+        rgb_path = self.img_paths[index]
+        img_name = os.path.basename(rgb_path)
+        ir_path = os.path.join(self.ir_dir, img_name)
         gt_path = os.path.join(
             self.gt_dir, os.path.splitext(img_name)[0] + '.h5')
-        img, target = load_data(img_path, gt_path, self.train)
+        rgb_img, ir_img, target = load_data(rgb_path, ir_path, gt_path, self.train)
+
         if self.transform is not None:
-            img = self.transform(img)
-        return img, target
+            rgb_img = self.transform(rgb_img)
+            ir_img = self.transform(ir_img)
+
+        return rgb_img, ir_img, target
 
 
 lr = 1e-7
 original_lr = lr
 batch_size = 1
 momentum = 0.95
-decay = 5*1e-4
+decay = 5 * 1e-4
 epochs = 400
 steps = [-1, 1, 100, 150]
 scales = [1, 1, 1, 1]
@@ -78,6 +93,7 @@ seed = time.time()
 print_freq = 30
 img_dir = "./dataset/train/rgb/"
 gt_dir = "./dataset/train/hdf5s/"
+ir_dir = "./dataset/train/tir"
 pre = None
 task = ""
 
@@ -100,11 +116,12 @@ def main():
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-                             0.229, 0.224, 0.225]),
+            0.229, 0.224, 0.225]),
     ])
 
     dataset = ImgDataset(
         img_dir,
+        ir_dir,
         gt_dir, transform=transform, train=True)
 
     train_size = int(0.8 * len(dataset))
@@ -130,7 +147,6 @@ def main():
             print("=> no checkpoint found at '{}'".format(pre))
 
     for epoch in range(start_epoch, epochs):
-
         adjust_learning_rate(optimizer, epoch)
 
         train(model, criterion, optimizer, epoch, train_loader)
@@ -150,7 +166,6 @@ def main():
 
 
 def train(model, criterion, optimizer, epoch, train_loader):
-
     losses = AverageMeter()
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -188,9 +203,9 @@ def train(model, criterion, optimizer, epoch, train_loader):
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  .format(
-                      epoch, i, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses))
+            .format(
+                epoch, i, len(train_loader), batch_time=batch_time,
+                data_time=data_time, loss=losses))
 
 
 # 模型在验证集(val_dataset)上的评估
@@ -209,7 +224,7 @@ def validate(model, val_loader):
         mae += abs(output.data.sum() -
                    target.sum().type(torch.FloatTensor).cuda())
 
-    mae = mae/len(val_loader)
+    mae = mae / len(val_loader)
     print(' * MAE {mae:.3f} '
           .format(mae=mae))
 
