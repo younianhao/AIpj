@@ -87,7 +87,7 @@ class ImgDataset(Dataset):
 lr = 1e-7
 original_lr = lr
 batch_size = 1
-momentum = 0.96
+momentum = 0.97
 decay = 5 * 1e-4
 epochs = 50
 steps = [-1, 1, 100, 150]
