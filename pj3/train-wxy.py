@@ -84,7 +84,7 @@ class ImgDataset(Dataset):
         return rgb_img, ir_img, target
 
 
-lr = 1e-7
+lr = 1e-6
 original_lr = lr
 batch_size = 1
 momentum = 0.95
