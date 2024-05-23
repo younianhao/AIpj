@@ -84,7 +84,7 @@ class ImgDataset(Dataset):
         return rgb_img, ir_img, target
 
 
-lr = 1e-4
+lr = 1e-5
 original_lr = lr
 batch_size = 1
 momentum = 0.95
@@ -115,14 +115,15 @@ def main():
     criterion = nn.MSELoss(size_average=False).cuda()
 
     #SGD
-    '''optimizer = torch.optim.SGD(model.parameters(), lr,
+    optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=decay)
-    '''
+    
     
     #Adam
+    '''
     optimizer = torch.optim.Adam(model.parameters(), lr, weight_decay=decay)
-
+    '''
 
     # 修改归一化参数以适应6通道数据
     transform = transforms.Compose([
