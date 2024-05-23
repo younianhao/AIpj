@@ -12,10 +12,7 @@ import h5py
 import cv2
 import shutil
 from model import CSRNet
-from torch.cuda.amp import GradScaler, autocast
 
-
-scaler = GradScaler()
 
 def save_checkpoint(state, is_best, task_id, filename='checkpoint.pth.tar', save_dir='./model/'):  # 添加保存目录参数
     checkpoint_path = os.path.join(save_dir, task_id + filename)
@@ -26,19 +23,30 @@ def save_checkpoint(state, is_best, task_id, filename='checkpoint.pth.tar', save
         shutil.copyfile(checkpoint_path, best_model_path)
 
 
-def load_data(img_path, gt_path, train=True):
-    img = Image.open(img_path).convert('RGB')
+# def load_data(img_path, gt_path, train=True):
+#     img = Image.open(img_path).convert('RGB')
+#     gt_file = h5py.File(gt_path)
+#     target = np.asarray(gt_file['density'])
+#     target = cv2.resize(
+#         target, (target.shape[1]//8, target.shape[0]//8), interpolation=cv2.INTER_CUBIC)*64
+#     return img, target
+
+def load_data(rgb_path, ir_path, gt_path, train=True):
+    rgb_img = Image.open(rgb_path).convert('RGB')
+    # 假设红外线图片也是三通道，如果是单通道则改为 .convert('L')
+    ir_img = Image.open(ir_path).convert('RGB')
     gt_file = h5py.File(gt_path)
     target = np.asarray(gt_file['density'])
-    target = cv2.resize(
-        target, (target.shape[1]//8, target.shape[0]//8), interpolation=cv2.INTER_CUBIC)*64
-    return img, target
+    target = cv2.resize(target, (target.shape[1] // 8, target.shape[0] // 8), interpolation=cv2.INTER_CUBIC) * 64
+    return rgb_img, ir_img, target
 
 
 class ImgDataset(Dataset):
-    def __init__(self, img_dir, gt_dir, shape=None, shuffle=True, transform=None, train=False, batch_size=1, num_workers=4):
+    def __init__(self, img_dir, ir_dir, gt_dir, shape=None, shuffle=True, transform=None, train=False, batch_size=1,
+                 num_workers=4):
         self.img_dir = img_dir
         self.gt_dir = gt_dir
+        self.ir_dir = ir_dir
         self.transform = transform
         self.train = train
         self.shape = shape
@@ -58,36 +66,30 @@ class ImgDataset(Dataset):
 
     def __getitem__(self, index):
         assert index <= len(self), 'index range error'
-        img_path = self.img_paths[index]
-        img_name = os.path.basename(img_path)
+        rgb_path = self.img_paths[index]
+        img_name = os.path.basename(rgb_path)
+
+        ir_name = os.path.splitext(img_name)[0] + 'R.jpg'
+        ir_path = os.path.join(self.ir_dir, ir_name)
+
         gt_path = os.path.join(
             self.gt_dir, os.path.splitext(img_name)[0] + '.h5')
-        img, target = load_data(img_path, gt_path, self.train)
+
+        rgb_img, ir_img, target = load_data(rgb_path, ir_path, gt_path, self.train)
+
         if self.transform is not None:
-            img = self.transform(img)
-        return img, target
+            rgb_img = self.transform(rgb_img)
+            ir_img = self.transform(ir_img)
 
-class CustomDensityLoss(nn.Module):
-    def __init__(self, alpha=0.5):
-        super(CustomDensityLoss, self).__init__()
-        self.alpha = alpha
-        self.mse = nn.MSELoss()
-        self.mae = nn.L1Loss()
-
-    def forward(self, inputs, targets):
-        mse_loss = self.mse(inputs, targets)
-        mae_loss = self.mae(inputs.sum(dim=(1, 2, 3)), targets.sum(dim=(1, 2, 3)))
-        return self.alpha * mse_loss + (1 - self.alpha) * mae_loss
-
-criterion = CustomDensityLoss(alpha=0.5).cuda()
+        return rgb_img, ir_img, target
 
 
-lr = 1e-7
+lr = 1e-5
 original_lr = lr
 batch_size = 1
 momentum = 0.95
-decay = 5*1e-4
-epochs = 100
+decay = 5 * 1e-4
+epochs = 50
 steps = [-1, 1, 100, 150]
 scales = [1, 1, 1, 1]
 workers = 8
@@ -95,6 +97,7 @@ seed = time.time()
 print_freq = 30
 img_dir = "./dataset/train/rgb/"
 gt_dir = "./dataset/train/hdf5s/"
+ir_dir = "./dataset/train/tir"
 pre = None
 task = ""
 
@@ -111,9 +114,17 @@ def main():
 
     criterion = nn.MSELoss(size_average=False).cuda()
 
-    optimizer = torch.optim.SGD(model.parameters(), lr,
+    #SGD
+    '''optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=decay)
+    '''
+    
+    #Adam
+    optimizer = torch.optim.Adam(model.parameters(), lr, weight_decay=decay)
+
+
+    # 修改归一化参数以适应6通道数据
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
@@ -122,12 +133,14 @@ def main():
 
     dataset = ImgDataset(
         img_dir,
+        ir_dir,
         gt_dir, transform=transform, train=True)
-    
-    sample_size = min(len(dataset), 600)  # 例如，使用前100个样本进行调试
+
+    sample_size = min(len(dataset), 600)  # 例如，使用前600个样本进行调试
     dataset = torch.utils.data.Subset(dataset, range(sample_size))
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
+    # 将数据集分割为训练集和验证集
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=workers)
@@ -148,7 +161,6 @@ def main():
             print("=> no checkpoint found at '{}'".format(pre))
 
     for epoch in range(start_epoch, epochs):
-
         adjust_learning_rate(optimizer, epoch)
 
         train(model, criterion, optimizer, epoch, train_loader)
@@ -168,7 +180,6 @@ def main():
 
 
 def train(model, criterion, optimizer, epoch, train_loader):
-
     losses = AverageMeter()
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -176,27 +187,34 @@ def train(model, criterion, optimizer, epoch, train_loader):
     print('epoch %d, processed %d samples, lr %.10f' %
           (epoch, epoch * len(train_loader.dataset), lr))
 
+    # 训练模式
     model.train()
     end = time.time()
 
-    for i, (img, target) in enumerate(train_loader):
+    # 遍历训练数据加载器
+    for i, (rgb_img, ir_img, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
-        img = img.cuda()
-        img = Variable(img)
+        # 前向传播
+        rgb_img = rgb_img.cuda()
+        ir_img = ir_img.cuda()
+        rgb_img = Variable(rgb_img)
+        ir_img = Variable(ir_img)
+
+        output = model(rgb_img, ir_img)
+        # output = model(img)
+
         target = target.type(torch.FloatTensor).unsqueeze(1).cuda()
         target = Variable(target)
+        loss = criterion(output, target)
+
+        # 反向传播 & 参数更新
+        # losses.update(loss.item(), img.size(0))
+        losses.update(loss.item(), rgb_img.size(0))
         optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-        with autocast():
-            output = model(img)
-            loss = criterion(output, target)
-
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
-
-        losses.update(loss.item(), img.size(0))
         batch_time.update(time.time() - end)
         end = time.time()
 
@@ -205,32 +223,38 @@ def train(model, criterion, optimizer, epoch, train_loader):
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  .format(
-                      epoch, i, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses))
+            .format(
+                epoch, i, len(train_loader), batch_time=batch_time,
+                data_time=data_time, loss=losses))
 
 
+# 模型在验证集(val_dataset)上的评估
 def validate(model, val_loader):
     print('begin test')
 
+    # 评估模式
     model.eval()
-    mae = 0
+    mae = 0  # 平均绝对误差（MAE）越小越好
 
-    for i, (img, target) in enumerate(val_loader):
-        img = img.cuda()
-        img = Variable(img)
-        output = model(img)
+    for i, (rgb_img, ir_img, target) in enumerate(val_loader):
+        rgb_img = rgb_img.cuda()
+        ir_img = ir_img.cuda()
+        rgb_img = Variable(rgb_img)
+        ir_img = Variable(ir_img)
+        output = model(rgb_img, ir_img)
 
         mae += abs(output.data.sum() -
                    target.sum().type(torch.FloatTensor).cuda())
 
-    mae = mae/len(val_loader)
+    mae = mae / len(val_loader)
     print(' * MAE {mae:.3f} '
           .format(mae=mae))
 
     return mae
 
 
+# 调整优化器学习率：每当当前轮次 epoch 大于等于 steps 中的某个值时，
+# 学习率将乘以 scales 中对应位置的值，即进行学习率衰减。
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
 
@@ -250,6 +274,7 @@ def adjust_learning_rate(optimizer, epoch):
         param_group['lr'] = lr
 
 
+# 计算和存储平均值和当前值
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
