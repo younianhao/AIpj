@@ -1,5 +1,5 @@
 python test.py \
-    --data-dir /path/to/preprocessed/dataset \
-    --save-dir /path/to/saved/model \
-    --model "model_name" \
+    --data-dir ../../rgbtcc_fdu/ \
+    --save-dir ./model \
+    --model model_best.pth \
     --device 0
