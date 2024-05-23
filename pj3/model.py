@@ -10,34 +10,18 @@ class CSRNet(nn.Module):
         self.frontend_feat = [64, 64, 'M', 128, 128,
                               'M', 256, 256, 256, 'M', 512, 512, 512]
         self.backend_feat = [512, 512, 512, 256, 128, 64]
-        self.frontend = make_layers(self.frontend_feat, in_channels=6)
+        self.frontend = make_layers(self.frontend_feat)
         self.backend = make_layers(
             self.backend_feat, in_channels=512, dilation=True)
         self.output_layer = nn.Conv2d(64, 1, kernel_size=1)
         if not load_weights:
-            # mod = models.vgg16(pretrained=True)
-            # self._initialize_weights()
-            # for i, (key, value) in enumerate(list(self.frontend.state_dict().items())):
-            #     self.frontend.state_dict()[key].data[:] = list(
-            #         mod.state_dict().items())[i][1].data[:]
             mod = models.vgg16(pretrained=True)
             self._initialize_weights()
-            # 加载预训练权重，注意要根据需要修改通道数
-            state_dict = mod.state_dict()
-            frontend_state_dict = self.frontend.state_dict()
-            for key in state_dict:
-                if 'features' in key:
-                    if key in frontend_state_dict:
-                        frontend_state_dict[key].copy_(state_dict[key])
+            for i, (key, value) in enumerate(list(self.frontend.state_dict().items())):
+                self.frontend.state_dict()[key].data[:] = list(
+                    mod.state_dict().items())[i][1].data[:]
 
-    # def forward(self, x):
-    #     x = self.frontend(x)
-    #     x = self.backend(x)
-    #     x = self.output_layer(x)
-    #     return x
-    def forward(self, rgb_img, ir_img):
-        # 将RGB和IR图像在通道维度上拼接
-        x = torch.cat((rgb_img, ir_img), dim=1)
+    def forward(self, x):
         x = self.frontend(x)
         x = self.backend(x)
         x = self.output_layer(x)
@@ -54,7 +38,7 @@ class CSRNet(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 
-def make_layers(cfg, in_channels=6, batch_norm=False, dilation=False):
+def make_layers(cfg, in_channels=3, batch_norm=False, dilation=False):
     if dilation:
         d_rate = 2
     else:
