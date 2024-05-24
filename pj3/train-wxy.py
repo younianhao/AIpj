@@ -92,15 +92,16 @@ def main():
     model = model.cuda()
     criterion = nn.MSELoss(size_average=False).cuda()
     #SGD
+    '''
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=decay)
-    
+    '''
     
     #Adam
-    '''
+    
     optimizer = torch.optim.Adam(model.parameters(), lr, weight_decay=decay)
-    '''
+    
     
     # 修改归一化参数以适应6通道数据
     transform = transforms.Compose([
