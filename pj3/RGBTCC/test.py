@@ -10,32 +10,16 @@ import math
 parser = argparse.ArgumentParser(description='Test')
 parser.add_argument('--data-dir', default='F:/DataSets/RGBT_CC',
                         help='training data directory')
-parser.add_argument('--model', default='./model/best_model.pth'
+parser.add_argument('--model', default='./best_model_10.762619034647942.pth'
                     , help='model name')
 parser.add_argument('--img_size', default=224, type=int, help='network input size')
 parser.add_argument('--device', default='0', help='gpu device')
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    test_path = os.path.join(args.data_dir, "new_test_224")
-    
-    gt_exist = os.path.exists(test_path)
-    if gt_exist:
-        print(f"{test_path} exists")
-        
-    print(f"Contents of {test_path}:")
-    
-    for root, dirs, files in os.walk(test_path):
-        for name in files:
-            print(os.path.join(root, name))
 
-    datasets = Crowd(test_path, method='test')
-
-    if len(datasets) == 0:
-        print("The dataset is empty.")
-    else:
-    # 如果数据集不为空，创建 DataLoader
-        dataloader = torch.utils.data.DataLoader(datasets, 1, shuffle=False,
+    datasets = Crowd(os.path.join(args.data_dir, "new_test_224"), method='test')
+    dataloader = torch.utils.data.DataLoader(datasets, 1, shuffle=False,
                                              num_workers=0, pin_memory=False)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.device  # set vis gpu
@@ -54,7 +38,6 @@ if __name__ == '__main__':
     mse = [0, 0, 0, 0]
     total_relative_error = 0
     epoch_res = []
-
     for idx, (inputs, target, name) in enumerate(dataloader):
         print(idx)
         
