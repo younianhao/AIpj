@@ -7,7 +7,7 @@ import random
 import numpy as np
 import cv2
 import json
-
+from PIL import Image
 
 def random_crop(im_h, im_w, crop_h, crop_w):
     res_h = im_h - crop_h
@@ -43,14 +43,13 @@ def gen_discrete_map(im_height, im_width, points):
     assert np.sum(discrete_map) == num_gt
     return discrete_map
 
-
 class Crowd(data.Dataset):
     def __init__(self, root_path, crop_size=256,
                  downsample_ratio=4,
                  method='train'):
         print("init_Crowd dataset")
         self.root_path = root_path
-        self.gt_list = sorted(glob(os.path.join(self.root_path, '*.npy')))  # change to npy for gt_list
+        self.rgb_list = sorted(glob(os.path.join(self.root_path, '*_RGB.jpg')))
         if method not in ['train', 'val', 'test']:
             raise Exception("not implement")
         self.method = method
@@ -60,12 +59,20 @@ class Crowd(data.Dataset):
         assert self.c_size % self.d_ratio == 0
         self.dc_size = self.c_size // self.d_ratio
 
+        self.RGB_transform_dataaug = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.407, 0.389, 0.396],
+                std=[0.241, 0.246, 0.242]),
+        ])
+
         self.RGB_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.407, 0.389, 0.396],
                 std=[0.241, 0.246, 0.242]),
         ])
+
         self.T_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(
@@ -73,29 +80,40 @@ class Crowd(data.Dataset):
                 std=[0.317, 0.174, 0.191]),
         ])
 
+
     def __len__(self):
-        return len(self.gt_list)
+        return len(self.rgb_list)
 
     def __getitem__(self, item):
-        gt_path = self.gt_list[item]
-        rgb_path = gt_path.replace('GT', 'RGB').replace('npy', 'jpg')
-        t_path = gt_path.replace('GT', 'T').replace('npy', 'jpg')
+        rgb_path = self.rgb_list[item]
+        
+        gt_path = rgb_path.replace("RGB.jpg", "GT.npy")
+        t_path = rgb_path.replace('RGB', 'T')
 
         RGB = cv2.imread(rgb_path)[..., ::-1].copy()
         T = cv2.imread(t_path)[..., ::-1].copy()
+        
+        
+        gt_exist = os.path.exists(gt_path)
 
         if self.method == 'train':
+            if not gt_exist:
+                print("error in training: cannot find npy file")
             keypoints = np.load(gt_path)
             return self.train_transform(RGB, T, keypoints)
 
         elif self.method == 'val' or self.method == 'test':
-            keypoints = np.load(gt_path)
-            gt = keypoints
-            k = np.zeros((T.shape[0], T.shape[1]))
-            for i in range(0, len(gt)):
-                if int(gt[i][1]) < T.shape[0] and int(gt[i][0]) < T.shape[1]:
-                    k[int(gt[i][1]), int(gt[i][0])] = 1
-            target = k
+            if gt_exist:
+                keypoints = np.load(gt_path)
+                gt = keypoints
+                k = np.zeros((T.shape[0], T.shape[1]))
+                for i in range(0, len(gt)):
+                    if int(gt[i][1]) < T.shape[0] and int(gt[i][0]) < T.shape[1]:
+                        k[int(gt[i][1]), int(gt[i][0])] = 1
+                target = k
+            else:
+                target = np.zeros((T.shape[0], T.shape[1]))
+            
             RGB = self.RGB_transform(RGB)
             T = self.T_transform(T)
             width, height = RGB.shape[2], RGB.shape[1]
@@ -112,7 +130,7 @@ class Crowd(data.Dataset):
                         img_return = torch.cat([img_return, crop_img], 0).cuda()
                         t_return = torch.cat([t_return, crop_t], 0).cuda()
 
-            name = os.path.basename(gt_path).split('.')[0]
+            name = os.path.basename(gt_path).split('_GT')[0]
             input = [img_return, t_return]
             return input, target, name
 
@@ -138,10 +156,23 @@ class Crowd(data.Dataset):
         gt_discrete = gt_discrete.reshape([down_h, self.d_ratio, down_w, self.d_ratio]).sum(axis=(1, 3))
         gt_discrete = np.expand_dims(gt_discrete, 0)
 
-        RGB = self.RGB_transform(RGB)
+
+        # 随机水平翻转
+        if random.random() > 0.5:
+            RGB = np.fliplr(RGB).copy()
+            T = np.fliplr(T).copy()
+            gt_discrete = np.fliplr(gt_discrete).copy()
+            keypoints[:, 0] = w - keypoints[:, 0]  # 水平翻转关键点
+        
+        # 将 numpy 数组转换为 PIL 图像
+        RGB = Image.fromarray(RGB)
+        T = Image.fromarray(T)
+
+        RGB = self.RGB_transform_dataaug(RGB)
         T = self.T_transform(T)
+
+
         input = [RGB, T]
 
         return input, torch.from_numpy(keypoints.copy()).float(), torch.from_numpy(
             gt_discrete.copy()).float(), st_size
-
