@@ -17,8 +17,9 @@ parser.add_argument('--device', default='0', help='gpu device')
 args = parser.parse_args()
 
 if __name__ == '__main__':
-
-    datasets = Crowd(os.path.join(args.data_dir, "new_test_224"), method='test')
+    test_path = os.path.join(args.data_dir, "new_test_224")
+    gt_exist = os.path.exists(test_path)
+    datasets = Crowd(test_path, method='test')
     dataloader = torch.utils.data.DataLoader(datasets, 1, shuffle=False,
                                              num_workers=0, pin_memory=False)
 
