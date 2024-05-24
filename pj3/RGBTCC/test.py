@@ -18,9 +18,24 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     test_path = os.path.join(args.data_dir, "new_test_224")
+    
     gt_exist = os.path.exists(test_path)
+    if gt_exist:
+        print(f"{test_path} exists")
+        
+    print(f"Contents of {test_path}:")
+    
+    for root, dirs, files in os.walk(test_path):
+        for name in files:
+            print(os.path.join(root, name))
+
     datasets = Crowd(test_path, method='test')
-    dataloader = torch.utils.data.DataLoader(datasets, 1, shuffle=False,
+
+    if len(datasets) == 0:
+        print("The dataset is empty.")
+    else:
+    # 如果数据集不为空，创建 DataLoader
+        dataloader = torch.utils.data.DataLoader(datasets, 1, shuffle=False,
                                              num_workers=0, pin_memory=False)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.device  # set vis gpu
@@ -39,7 +54,7 @@ if __name__ == '__main__':
     mse = [0, 0, 0, 0]
     total_relative_error = 0
     epoch_res = []
-    print(len(dataloader))
+
     for idx, (inputs, target, name) in enumerate(dataloader):
         print(idx)
         
