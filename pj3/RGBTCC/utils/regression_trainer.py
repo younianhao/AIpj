@@ -172,7 +172,7 @@ class RegTrainer(Trainer):
                      .format(self.epoch, epoch_loss.get_avg(), epoch_game.get_avg(), np.sqrt(epoch_mse.get_avg()),
                              time.time()-epoch_start))
         model_state_dic = self.model.state_dict()
-        save_path = os.path.join(self.save_dir, '{}_ckpt.tar'.format(self.epoch))
+        save_path = os.path.join(self.save_dir, 'best_model.tar')
         torch.save({
             'epoch': self.epoch,
             'optimizer_state_dict': self.optimizer.state_dict(),

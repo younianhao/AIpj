@@ -1,4 +1,4 @@
 python test.py \
     --data-dir ./rgbtcc_dataset/ \
-    --model ./model/0523-174323/3_ckpt.tar \
+    --model ./model/best_model.tar \
     --device 0
