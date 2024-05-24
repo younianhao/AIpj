@@ -54,7 +54,7 @@ def parse_args():
                         help='entropy regularization in sinkhorn')
     parser.add_argument('--num-of-iter-in-ot', type=int, default=100,
                         help='sinkhorn iterations')
-    parser.add_argument('--model', default='../model/model_best.pth.tar'
+    parser.add_argument('--model', default='./pretrained/best_model.pth'
                     , help='model name')
     parser.add_argument('--norm-cood', type=int, default=0, help='whether to norm cood when computing distance')
     args = parser.parse_args()
