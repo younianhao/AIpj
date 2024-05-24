@@ -11,7 +11,7 @@ from PIL import Image
 import h5py
 import cv2
 import shutil
-from model import CSRNet
+from model_rgb_ir import CSRNet
 def save_checkpoint(state, is_best, task_id, filename='checkpoint.pth.tar', save_dir='./model/'):  # 添加保存目录参数
     checkpoint_path = os.path.join(save_dir, task_id + filename)
     torch.save(state, checkpoint_path)
