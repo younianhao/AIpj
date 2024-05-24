@@ -4,5 +4,4 @@ python train.py \
     --pretrained_model ../model/model_best.pth.tar\
     --batch-size 8 \
     --lr 1e-5 \
-    --max-epoch 10 \
     --device 0
