@@ -10,7 +10,7 @@ import math
 parser = argparse.ArgumentParser(description='Test')
 parser.add_argument('--data-dir', default='F:/DataSets/RGBT_CC',
                         help='training data directory')
-parser.add_argument('--model', default='./best_model_10.762619034647942.pth'
+parser.add_argument('--model', default='./model/best_model.pth'
                     , help='model name')
 parser.add_argument('--img_size', default=224, type=int, help='network input size')
 parser.add_argument('--device', default='0', help='gpu device')
@@ -38,6 +38,7 @@ if __name__ == '__main__':
     mse = [0, 0, 0, 0]
     total_relative_error = 0
     epoch_res = []
+    print(len(dataloader))
     for idx, (inputs, target, name) in enumerate(dataloader):
         print(idx)
         
