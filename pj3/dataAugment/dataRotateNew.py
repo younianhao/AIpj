@@ -3,12 +3,18 @@ import os
 import xml.etree.ElementTree as ET
 import random
 
-def flip_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file):
-    # 处理图像文件
+def flip_image_and_xml(input_rgb_file, input_tir_file,input_xml_file, output_rgb_file, output_tir_file,output_xml_file):
+    # 处理rgb图像文件
     img = Image.open(input_rgb_file)
     flipped_img = img.transpose(Image.FLIP_TOP_BOTTOM)
     flipped_img = flipped_img.transpose(Image.FLIP_LEFT_RIGHT)
     flipped_img.save(output_rgb_file)
+
+    # 处理tir图像文件
+    img2 = Image.open(input_tir_file)
+    flipped_img2 = img2.transpose(Image.FLIP_TOP_BOTTOM)
+    flipped_img2 = flipped_img2.transpose(Image.FLIP_LEFT_RIGHT)
+    flipped_img2.save(output_tir_file)
 
     # 处理XML文件
     tree = ET.parse(input_xml_file)
@@ -38,6 +44,7 @@ def flip_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_x
 
 # 文件夹路径
 rgb_path = "./dataset/train/rgb/"
+tir_path = "./dataset/train/tir/"
 xml_path = "./dataset/train/labels/"
 
 # 获取文件列表
@@ -45,9 +52,10 @@ file_list = list(range(1, 1807))
 selected_files = random.sample(file_list, 300)
 for index in selected_files:
     input_rgb_file = os.path.join(rgb_path, str(index) + ".jpg")
+    input_tir_file = os.path.join(tir_path, str(index) + "R.jpg")
     input_xml_file = os.path.join(xml_path, str(index) + "R.xml")
-
     output_rgb_file = os.path.join(rgb_path, "_Rotate" + str(index) + ".jpg")
+    output_tir_file = os.path.join(tir_path, "_Rotate" + str(index) + "R.jpg")
     output_xml_file = os.path.join(xml_path, "_Rotate" + str(index) + "R.xml")
-    flip_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file)
+    flip_image_and_xml(input_rgb_file, input_tir_file,input_xml_file, output_rgb_file, output_tir_file,output_xml_file)
 print("successfully create 300 rotated samples")

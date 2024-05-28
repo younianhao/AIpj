@@ -3,8 +3,8 @@ import os
 import xml.etree.ElementTree as ET
 import random
 
-def split_and_combine_images(input_rgb_file1, input_rgb_file2, input_xml_file1, input_xml_file2, output_rgb_file, output_xml_file):
-    # 处理图像文件
+def split_and_combine_images(input_rgb_file1, input_rgb_file2,input_tir_file1, input_tir_file2, input_xml_file1, input_xml_file2, output_rgb_file,output_tir_file, output_xml_file):
+    # 处理rgb图像文件
     img1 = Image.open(input_rgb_file1)
     img2 = Image.open(input_rgb_file2)
     width, height = img1.size
@@ -16,6 +16,19 @@ def split_and_combine_images(input_rgb_file1, input_rgb_file2, input_xml_file1, 
     combined_img.paste(left_half1, (0, 0))
     combined_img.paste(right_half2, (half_width, 0))
     combined_img.save(output_rgb_file)
+
+    # 处理tir图像文件
+    img12 = Image.open(input_tir_file1)
+    img22 = Image.open(input_tir_file2)
+    width2, height2 = img12.size
+    half_width2 = width2 // 2
+
+    left_half12 = img12.crop((0, 0, half_width2, height2))
+    right_half22 = img22.crop((half_width2, 0, width2, height2))
+    combined_img2 = Image.new('RGB', (width2, height2))
+    combined_img2.paste(left_half12, (0, 0))
+    combined_img2.paste(right_half22, (half_width2, 0))
+    combined_img2.save(output_tir_file)
 
     # 处理XML文件
     tree1 = ET.parse(input_xml_file1)
@@ -59,6 +72,7 @@ def split_and_combine_images(input_rgb_file1, input_rgb_file2, input_xml_file1, 
 
 # 文件夹路径
 rgb_path = "./dataset/train/rgb/"
+tir_path = "./dataset/train/tir/"
 xml_path = "./dataset/train/labels/"
 
 # 获取文件列表
@@ -70,11 +84,14 @@ selected_files2 = random.sample(file_list, 300)
 for index1, index2 in zip(selected_files1, selected_files2):
     input_rgb_file1 = os.path.join(rgb_path, str(index1) + ".jpg")
     input_rgb_file2 = os.path.join(rgb_path, str(index2) + ".jpg")
+    input_tir_file1 = os.path.join(tir_path, str(index1) + "R.jpg")
+    input_tir_file2 = os.path.join(tir_path, str(index2) + "R.jpg")
     input_xml_file1 = os.path.join(xml_path, str(index1) + "R.xml")
     input_xml_file2 = os.path.join(xml_path, str(index2) + "R.xml")
 
     output_rgb_file = os.path.join(rgb_path, "_combined" + str(index1) + "and" + str(index2) + ".jpg")
+    output_tir_file = os.path.join(tir_path, "_combined" + str(index1) + "and" + str(index2) + "R.jpg")
     output_xml_file = os.path.join(xml_path, "_combined" + str(index1) + "and" + str(index2) + "R.xml")
 
-    split_and_combine_images(input_rgb_file1, input_rgb_file2, input_xml_file1, input_xml_file2, output_rgb_file, output_xml_file)
+    split_and_combine_images(input_rgb_file1, input_rgb_file2,input_tir_file1, input_tir_file2, input_xml_file1, input_xml_file2, output_rgb_file,output_tir_file, output_xml_file)
 print("successfully create 300 combined samples")
