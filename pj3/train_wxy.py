@@ -27,9 +27,14 @@ def load_data(img_path, gt_path, train=True):
     img = Image.open(img_path).convert('RGB')
     gt_file = h5py.File(gt_path)
     target = np.asarray(gt_file['density'])
-    target = cv2.resize(
-        target, (target.shape[1]//8, target.shape[0]//8), interpolation=cv2.INTER_CUBIC)*64
+    print("Original target shape:", target.shape)  # 添加这行打印语句
+    try:
+        target = cv2.resize(
+            target, (target.shape[1]//8, target.shape[0]//8), interpolation=cv2.INTER_CUBIC)*64
+    except Exception as e:
+        print("Error during resize:", e)  # 添加这行打印语句
     return img, target
+
 
 
 class ImgDataset(Dataset):
