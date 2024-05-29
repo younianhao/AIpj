@@ -17,13 +17,13 @@ def random_image_color(input_rgb_file, output_rgb_file):
     img = Image.open(input_rgb_file)
     hue_factor, saturation_factor = 1, 1
     if random.random() > 0.5:
-        hue_factor = random.uniform(0.25, 0.75)
+        hue_factor = random.uniform(0.50, 0.75)
     else:
-        hue_factor = random.uniform(1.25, 1.75)
+        hue_factor = random.uniform(1.25, 1.50)
     if random.random() > 0.5:
-        saturation_factor = random.uniform(0.25, 0.75)
+        saturation_factor = random.uniform(0.50, 0.75)
     else:
-        saturation_factor = random.uniform(1.25, 1.75)
+        saturation_factor = random.uniform(1.25, 1.50)
     img = random_color_transform(img, hue_factor, saturation_factor)
     img.save(output_rgb_file)
 
