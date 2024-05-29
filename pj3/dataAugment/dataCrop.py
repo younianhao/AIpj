@@ -55,7 +55,7 @@ xml_path = "./dataset/train/labels/"
 crop_scale= 0.4
 
 # 获取文件列表
-file_list = list(range(1, 3))
+file_list = list(range(1, 1807))
 selected_files = random.sample(file_list, 300)
 for index in selected_files:
     input_rgb_file = os.path.join(rgb_path, str(index) + ".jpg")

@@ -42,12 +42,12 @@ xml_path = "./dataset/train/labels/"
 
 # 获取文件列表
 file_list = list(range(1, 1807))
-selected_files = random.sample(file_list, 100)
+selected_files = random.sample(file_list, 300)
 for index in selected_files:
     input_rgb_file = os.path.join(rgb_path, str(index) + ".jpg")
     input_xml_file = os.path.join(xml_path, str(index) + "R.xml")
 
-    output_rgb_file = os.path.join(rgb_path, "_Rotate" + str(index) + ".jpg")
-    output_xml_file = os.path.join(xml_path, "_Rotate" + str(index) + "R.xml")
+    output_rgb_file = os.path.join(rgb_path, str(index) + ".jpg")
+    output_xml_file = os.path.join(xml_path, str(index) + "R.xml")
     flip_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file)
 print("successfully create 300 rotated samples")

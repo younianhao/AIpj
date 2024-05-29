@@ -119,7 +119,7 @@ rgb_path = "./dataset/train/rgb/"
 xml_path = "./dataset/train/labels/"
 
 # 获取文件列表
-file_list = list(range(1, 20))
+file_list = list(range(1, 1807))
 selected_files1 = random.sample(file_list, 300)
 selected_files2 = random.sample(file_list, 300)
 selected_files3 = random.sample(file_list, 300)
