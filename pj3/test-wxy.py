@@ -5,7 +5,7 @@ from model import CSRNet
 from torchvision import transforms
 from torch.autograd import Variable
 
-test_path = "./dataset_out/test/images/"
+test_path = "./dataset_out/test/resized_images/"
 img_paths = [f"{test_path}{i}.jpg" for i in range(1, 1001)]
 
 model = CSRNet()

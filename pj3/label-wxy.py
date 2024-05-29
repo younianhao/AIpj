@@ -31,7 +31,7 @@ def parse_xml(xml_file, image_shape):
 
 
 xml_path = "./dataset_out/train/resized_labels/"
-mat_path = "./dataset_out/train/hdf5s/"
+mat_path = "./dataset_out/train/hdf5s_/"
 image_shape = (512, 640)  # Assuming the image shape is fixed
 
 sum = 0
