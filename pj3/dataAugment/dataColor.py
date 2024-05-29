@@ -15,7 +15,7 @@ def random_color_transform(image, hue_factor, saturation_factor):
 def random_image_color(input_rgb_file, output_rgb_file):
     # 处理图像文件
     img = Image.open(input_rgb_file)
-    hue_factor, saturation_factor = 1, 1, 1
+    hue_factor, saturation_factor = 1, 1
     if random.random() > 0.5:
         hue_factor = random.uniform(0.25, 0.75)
     else:

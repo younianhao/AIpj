@@ -10,13 +10,11 @@ def clear_to_image(input_rgb_file, output_rgb_file):
     img = Image.open(input_rgb_file)
     stat = ImageStat.Stat(img)
     luminance = stat.mean[0]  # 获取图像的亮度值
-    print(luminance)
     if luminance < 80:
         brightness_factor = 80 / luminance  # 根据亮度值计算增加的亮度倍数
         img = ImageEnhance.Brightness(img).enhance(brightness_factor)
 
     contrast = stat.stddev[0]  # 获取图像的对比度值
-    print(contrast)
     if contrast < 50:
         contrast_factor = 50 / contrast
         img = ImageEnhance.Contrast(img).enhance(contrast_factor)  # 根据对比度值增加对比度

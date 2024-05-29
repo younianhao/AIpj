@@ -29,8 +29,8 @@ def crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_fil
                 x = int(obj.find('point/x').text)
                 y = int(obj.find('point/y').text)
                 if x >=left and x < right and y >=top and y < bottom: 
-                    point.find('x').text = str((x-left)/(right-left)*width)
-                    point.find('y').text = str((y-top)/(bottom-top)*height)
+                    point.find('x').text = str(round((x-left)/(right-left)*width))
+                    point.find('y').text = str(round((y-top)/(bottom-top)*height))
                 else:
                     root.remove(obj)
             except:
@@ -41,10 +41,10 @@ def crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_fil
                 ymax = int(obj.find('bndbox/ymax').text)
                 x = (xmin + xmax) // 2
                 if x >=left and x < right and y >=top and y < bottom: 
-                    bndbox.find('xmin').text = str((xmin-left)/(right-left)*width)
-                    bndbox.find('ymin').text = str((ymin-top)/(bottom-top)*height)
-                    bndbox.find('xmax').text = str((xmax-left)/(right-left)*width)
-                    bndbox.find('ymax').text = str((ymax-top)/(bottom-top)*height)
+                    bndbox.find('xmin').text = str(round((xmin-left)/(right-left)*width))
+                    bndbox.find('ymin').text = str(round((ymin-top)/(bottom-top)*height))
+                    bndbox.find('xmax').text = str(round((xmax-left)/(right-left)*width))
+                    bndbox.find('ymax').text = str(round((ymax-top)/(bottom-top)*height))
                 else:
                     root.remove(obj)
     tree.write(output_xml_file)
