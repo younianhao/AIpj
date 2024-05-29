@@ -30,7 +30,7 @@ def parse_xml(xml_file, image_shape):
     return density_map
 
 
-xml_path = "./dataset_out/train/labels/"
+xml_path = "./dataset_out/train/resized_labels/"
 mat_path = "./dataset_out/train/hdf5s/"
 image_shape = (512, 640)  # Assuming the image shape is fixed
 
