@@ -7,11 +7,11 @@ import random
 def add_noise_to_image(img):
     draw = ImageDraw.Draw(img)
     width, height = img.size
-    for _ in range(500):  # 添加1000个噪点
+    for _ in range(500):  # 添加500个噪点
         x = random.randint(0, width)
         y = random.randint(0, height)
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))  # 随机选择颜色
-        draw.ellipse([x, y, x+2, y+2], fill=color)  # 在随机位置添加大小为2x2的椭圆噪点
+        draw.ellipse([x, y, x+1, y+1], fill=color)  # 在随机位置添加大小为2x2的椭圆噪点
     return img
 
 # 修改后的函数

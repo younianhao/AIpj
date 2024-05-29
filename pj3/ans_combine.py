@@ -37,9 +37,9 @@ def merge_files(file1, file2, weight1, weight2, output_file):
 # Define file paths and weights
 file1 = 'ans_5.24_16.70.txt'
 file2 = 'ans_5.25_12.70.txt'
-weight1 = 0.15
-weight2 = 0.85
-output_file = '2.txt'
+weight1 = 0.30
+weight2 = 0.70
+output_file = '4.txt'
 
 # Merge files and write the result
 merge_files(file1, file2, weight1, weight2, output_file)

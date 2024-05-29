@@ -40,6 +40,7 @@ def crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_fil
                 xmax = int(obj.find('bndbox/xmax').text)
                 ymax = int(obj.find('bndbox/ymax').text)
                 x = (xmin + xmax) // 2
+                y = (ymin + ymax) // 2
                 if x >=left and x < right and y >=top and y < bottom: 
                     bndbox.find('xmin').text = str(round((xmin-left)/(right-left)*width))
                     bndbox.find('ymin').text = str(round((ymin-top)/(bottom-top)*height))
