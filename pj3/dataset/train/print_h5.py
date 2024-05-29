@@ -15,4 +15,4 @@ def print_h5_file_contents(file_path):
             print("------------------------")
 
 # 调用函数并传入标准H5文件路径
-print_h5_file_contents('hdf5s/1.h5')
+print_h5_file_contents('hdf5s/123.h5')
