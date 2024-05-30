@@ -3,7 +3,7 @@ import os
 import xml.etree.ElementTree as ET
 import random
 
-def crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file,crop_scale):
+def crop_and_resize_image_and_xml(input_rgb_file, input_tir_file, input_xml_file, output_rgb_file, output_tir_file, output_xml_file, crop_scale):
     # 处理图像文件
     img = Image.open(input_rgb_file)
     width, height = img.size
@@ -14,6 +14,13 @@ def crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_fil
     cropped_img = img.crop((left, top, right, bottom))
     cropped_img = cropped_img.resize((width, height))  # 将裁剪后的图像缩放回原始尺寸
     cropped_img.save(output_rgb_file)
+
+    # 处理tir图像文件
+    img2 = Image.open(input_tir_file)
+    cropped_img2 = img2.crop((left, top, right, bottom))
+    cropped_img2 = cropped_img2.resize((width, height))  # 将裁剪后的图像缩放回原始尺寸
+    cropped_img2.save(output_tir_file)
+
 
     #处理XML文件
     tree = ET.parse(input_xml_file)
@@ -52,6 +59,7 @@ def crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_fil
 
 # 文件夹路径
 rgb_path = "./dataset/train/rgb/"
+tir_path = "./dataset/train/tir/"
 xml_path = "./dataset/train/labels/"
 crop_scale= 0.5
 
@@ -60,9 +68,11 @@ file_list = list(range(1, 1807))
 selected_files = random.sample(file_list, 300)
 for index in selected_files:
     input_rgb_file = os.path.join(rgb_path, str(index) + ".jpg")
+    input_tir_file = os.path.join(tir_path, str(index) + "R.jpg")
     input_xml_file = os.path.join(xml_path, str(index) + "R.xml")
 
     output_rgb_file = os.path.join(rgb_path, "_Crop" + str(index) + ".jpg")
+    output_tir_file = os.path.join(tir_path, "_Crop" + str(index) + "R.jpg")
     output_xml_file = os.path.join(xml_path, "_Crop" + str(index) + "R.xml")
-    crop_and_resize_image_and_xml(input_rgb_file, input_xml_file, output_rgb_file, output_xml_file, crop_scale)
+    crop_and_resize_image_and_xml(input_rgb_file, input_tir_file, input_xml_file, output_rgb_file, output_tir_file, output_xml_file, crop_scale)
 print("successfully create 300 cropped and resized samples")
